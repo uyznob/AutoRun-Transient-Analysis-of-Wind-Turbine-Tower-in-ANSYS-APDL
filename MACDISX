@@ -1,0 +1,6 @@
+*DO,l,1,10
+	SET,,,,,,,l
+	*DO,m,1,76
+		DISTABX(m,l,arg3) = UX(nodetab(m,1))
+	*ENDDO
+*ENDDO

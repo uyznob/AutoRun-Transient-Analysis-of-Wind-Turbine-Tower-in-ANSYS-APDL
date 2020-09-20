@@ -1,0 +1,10 @@
+!========================================================
+! Time history Variables window ¿¬ Ã¤·Î command ÀÔ·Â
+!========================================================
+sfiname = STRCAT('Seg_',CHRVAL(arg1))
+sfiname = STRCAT(sfiname,'_Case_')
+sfiname = STRCAT(sfiname,CHRVAL(arg2))
+*CFOPEN,sfiname,'csv','Data',
+*VWRITE,ACCTAB(1,1),ACCTAB(1,2),ACCTAB(1,3),ACCTAB(1,4),ACCTAB(1,5),ACCTAB(1,6),ACCTAB(1,7),ACCTAB(1,8),ACCTAB(1,9),ACCTAB(1,10),ACCTAB(1,11)
+%G, %G, %G, %G, %G, %G, %G, %G, %G, %G, %G
+*CFCLOS

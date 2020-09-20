@@ -1,0 +1,5 @@
+finame = STRCAT('Case',CHRVAL(arg1))
+*CFOPEN,finame,CSV,Frequency,
+*VWRITE,FRETAB(1,1),FRETAB(1,2)
+%7.5F, %7.5F
+*CFCLOS

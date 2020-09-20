@@ -1,0 +1,6 @@
+*DO,l,1,10
+	SET,,,,,,,l
+	*DO,m,1,76
+		DISTABY(m,l,arg3) = UY(nodetab(m,1))
+	*ENDDO
+*ENDDO
