@@ -1,0 +1,7 @@
+finame = STRCAT('UY',CHRVAL(arg1))
+*CFOPEN,finame,CSV,Data,APPEND
+*DO,p,1,10
+	*VWRITE,DISTABY(1,2,p),DISTABY(1,5,p),DISTABY(1,7,p)
+	%10.8F, %10.8F, %10.8F
+*ENDDO
+*CFCLOS
