@@ -1,0 +1,334 @@
+FINI
+/CLEAR
+/TITLE,Wind Turbine Tower: Model 1; Date: 23/04/2017
+!Define structural analysis
+/NOPR
+KEYW,PR_STRUC,1
+KEYW,PR_THERM,0
+KEYW,PR_FLUID,0
+KEYW,PR_ELMAG,0
+
+! Unit : kg, m, s
+/UNITS,SI
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!KEEP THE TOOLBAR WITH WWT BUTTON
+ABBRES,NEW,'TOOLBAR',' ',' '
+
+/PREP7
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!Load geometry data
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+*DIM,geotab,table,76,7,,id,spec
+*TREAD,geotab(0,0),WTTGeo,txt,,1
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!Load node data
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+*DIM,nodetab,table,72,1,,No,Id
+*TREAD,nodetab(0,0),Node,txt,,1
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!Load elevation table for I
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!*DIM,eleitab,table,301,1,,No,z
+!*TREAD,eleitab(0,0),elei,txt,,1
+
+!*MSG,UI,nodetab(76,1)
+!%G
+!/eof
+!=====================================
+!DEFINE MATERIAL PROPERTIES
+!=====================================
+ES355 = 2.1e+011
+DS355 = 7847.094
+!Material for 75 segments
+*do,i,1,71
+	MPTEMP,1,0
+	MPDATA,EX,i,1,ES355
+	MPDATA,PRXY,i,1,0.3
+	MPDATA,DENS,i,1,DS355
+*enddo
+!Material for virtual beams connecting lumped mass
+MPTEMP,1,0
+MPDATA,EX,72,1,1e-8
+MPDATA,PRXY,72,1,0
+MPDATA,DENS,72,1,1e-8
+
+!=====================================
+!DEFINE TYPE ELEMENT
+!=====================================
+!Define shell element for 75 segments
+ET,1,SHELL181
+!Define shell sections for 75 segments
+*do,i,1,75
+	sect,i,shell,,SEG%i%
+	*IF,i,EQ,1,THEN
+		secdata, geotab(i,3),i,0,3  !!!!!!!!!!!!!!!!!!!OFFSET THE FLANGE HERE
+	*ELSEIF,i,GE,2,AND,i,LE,4
+		secdata, geotab(i,3),2,0,3  !!!!!!!!!!!!!!!!!!!OFFSET THE FLANGE HERE
+	*ELSEIF,i,GE,5,AND,i,LE,18
+		secdata, geotab(i,3),i-2,0,3  !!!!!!!!!!!!!!!!!!!OFFSET THE FLANGE HERE
+	*ELSEIF,i,GE,19,AND,i,LE,20
+		secdata, geotab(i,3),17,0,3  !!!!!!!!!!!!!!!!!!!OFFSET THE FLANGE HERE
+	*ELSEIF,i,GE,21,AND,i,LE,42
+		secdata, geotab(i,3),i-3,0,3  !!!!!!!!!!!!!!!!!!!OFFSET THE FLANGE HERE
+	*ELSEIF,i,GE,43,AND,i,LE,44
+		secdata, geotab(i,3),40,0,3  !!!!!!!!!!!!!!!!!!!OFFSET THE FLANGE HERE
+	*ELSEIF,i,GE,45,AND,i,LE,75
+		secdata, geotab(i,3),i-4,0,3  !!!!!!!!!!!!!!!!!!!OFFSET THE FLANGE HERE
+	*ENDIF
+	secoffset,USER,geotab(i,7)
+*enddo
+
+!Define lumped mass element
+ET,2,MASS21
+
+!=====================================
+!MODELLING GEOMETRY
+!=====================================
+!Draw centers and conner points of circle
+!Conner points latter used for line definition
+*do,i,1,76
+	K,i,0,geotab(i,5),0
+	!Make point for lines and base points later to take acc
+	K,i+76,-geotab(i,1)/2,geotab(i,5),0
+*enddo
+
+!Draw the lines by LEFT side of tower
+*do,i,1,75
+	LSTR,i+76,i+77
+	LESIZE,i, , ,geotab(i,6), , , , ,1
+*enddo
+
+!Draw circle
+*do,i,1,76
+	!If i=36 then i+38 is the point in the bottom
+	!That make circle out of horizontal plane
+	!So use point 75 to be the upper direction point of last circle
+	*IF,i,EQ,76,THEN
+		!Create the top point as hub location
+		!For reference of last circle direction
+		K,kpinqr(0,14)+1,0,79.85,0
+		CIRCLE, i, geotab(i,1)/2,kpinqr(0,14), , ,
+	*ELSE
+		CIRCLE, i, geotab(i,1)/2,i+1, , ,
+	*ENDIF
+*enddo
+
+!Extrude the line on the path circle
+!to become the surface
+!Merge all coincident KEYPOINTS
+NUMMRG, KP, 1E-2, , , LOW
+
+!Create surface and define mesh size along lines
+*do,i,1,76
+	*IF,i,LT,76,THEN
+		LESIZE,4*i+72, , ,9, , , , ,1
+		LESIZE,4*i+73, , ,9, , , , ,1
+		LESIZE,4*i+74, , ,9, , , , ,1
+		LESIZE,4*i+75, , ,9, , , , ,1
+		!The order of lines affects the normal vector of
+		!surface
+		ADRAG, i,,,,,,4*i+75, 4*i+74, 4*i+73, 4*i+72
+	*ELSE
+		!Nothing but mesh the last circle
+		LESIZE,4*i+72, , ,9, , , , ,1
+		LESIZE,4*i+73, , ,9, , , , ,1
+		LESIZE,4*i+74, , ,9, , , , ,1
+		LESIZE,4*i+75, , ,9, , , , ,1
+	*ENDIF
+*enddo
+!Merge all coincident KEYPOINTS
+NUMMRG, KP, 1E-4, , , LOW
+!COMPRESS THE KEYPOINT NUMBER
+NUMCMP,KP
+
+!!!MESH ALL AREA
+!!!BEFORE MESH, SHOW THE ATTRIBUTE
+!!!DO NOT DELETE THIS, OTHERWISE ERROR
+!SLIST,   1,  36, ,BRIEF,all
+*do,i,1,75
+	TYPE,   1
+	*IF,i,EQ,1,THEN
+		MAT,    	i
+	*ELSEIF,i,GE,2,AND,i,LE,4
+		MAT,    	2
+	*ELSEIF,i,GE,5,AND,i,LE,18
+		MAT,    	i-2
+	*ELSEIF,i,GE,19,AND,i,LE,20
+		MAT,    	17
+	*ELSEIF,i,GE,21,AND,i,LE,42
+		MAT,		i-3
+	*ELSEIF,i,GE,43,AND,i,LE,44
+		MAT,		40
+	*ELSEIF,i,GE,45,AND,i,LE,75
+		MAT,		i-4
+	*ENDIF
+	ESYS,       0
+	SECNUM,   i
+	AMESH,4*i-3,4*i,1
+*enddo
+!Set boundary condition
+NSEL,S,LOC,Y,0
+D,ALL, , , , , ,UX,UY,UZ,ROTX,ROTY,ROTZ
+EPLOT
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!CHECKING MESH IS VERY IMPORTANT
+MCHECK
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!*DIM,IOR,table,301,1,,No,I
+!*do,i,1,301
+!	*GET, IOR(i,1), AREA, 0, IOR,0,0, eleitab(i,1),0,0,0
+!*enddo
+
+!*CFOPEN,'AAInertia Moment',CSV,Data,
+!*VWRITE,IOR(1,1)
+!%12.2F
+!*CFCLOS
+
+!=====================================
+!DEFINE LUMPED MASS
+!=====================================
+!!!THESE COMMAND CAN BE ERROR WHEN YOU ADD MORE NODES
+!Create lines connect lumped mass
+!Define element for these lines
+ET,3,BEAM188
+
+!Define section of beams
+SECTYPE,   76, BEAM, CTUBE, BEAM, 0
+SECOFFSET, CENT
+SECDATA,0.001,0.001+1e-8
+
+!Draw lumped mass nodes
+N,ndinqr(0,14)+1,-3,79.85,0
+N,ndinqr(0,14)+1,4.825,79.85,0
+N,ndinqr(0,14)+1,0,79.85,0
+!*MSG,UI,ndinqr(0,14)
+!%G
+
+!Create line elements on top tower
+*do,i,1,38
+	TYPE, 3
+	MAT, 72
+	ESYS, 0
+	SECNUM, 76
+	TSHAP,LINE
+	!Create line element
+	NSEL,S,NODE,,ndinqr(0,14)
+	NSEL,A,NODE,,i+ndinqr(0,14)-39
+	E,ndinqr(0,14),i+ndinqr(0,14)-39
+*enddo
+
+!Define rigid region
+*do,i,1,38
+	NSEL,S,NODE,,ndinqr(0,14)
+	NSEL,A,NODE,,i+ndinqr(0,14)-39
+	CERIG, ndinqr(0,14), i+ndinqr(0,14)-39,ALL
+*enddo
+!Define constant mass value
+R,1,39800,39800,39800, , , ,
+R,2,68000,68000,68000, , , ,
+
+!Assign mass to nodes
+Type,2
+Real, 1
+E, ndinqr(0,14)-2
+Type, 2
+Real, 2
+E,  ndinqr(0,14)-1
+!*MSG,UI,ndinqr(0,14)-1
+!%G
+!/EOF
+!=====================================
+!SOVLE MODAL ANALYSIS
+!=====================================
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!Set damage scenario
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!The number of damage location
+!Actually there are 76 segments but some
+!segments are small so frequency and mode shape
+!not change much
+!So we compress some very small segments to bigger ones
+!And accordingly, we have 71 virtual segments with 71 material ID
+ndl = 4
+!The number of damage severity
+!in each location, not include intact
+nds = 9
+!Number of mode extract for frequency
+nf = 10
+!Define table value
+!We have 10 000 value to write in a line
+!But ansys only alow 3640 value in a line
+!So divide the FRETAB into 4 to have good arrangement of data
+*DIM,FRETAB,,nf,1000
+!DAMTAB is for ANN output layer
+!1st row is the damage location
+!2nd row is the damage severity
+*DIM,DAMTAB,,4,1000
+!*DIM,DISTAB,,72,nds
+!76 is the number of nodes
+!10 is the number of modes
+!nds is the number of damage cases
+*DIM,DISTABX,,72,7,nds,NODE,MODE,CASE
+!*DIM,DISTABY,,72,7,nds,NODE,MODE,CASE
+*DIM,DISTABZ,,72,7,nds,NODE,MODE,CASE
+
+ES355 = 2.1e+011
+i5=0
+!=====================================
+!FIRST SEGMENT    1
+!=====================================
+
+*do,i1,9,9
+	/PREP7
+	MPTEMP,1,0
+	MPDATA,EX,71,1,ES355*(1-0.05*i1)
+	FINISH
+
+	*do,i2,0,nds
+		/PREP7
+		MPTEMP,1,0
+		MPDATA,EX,40,1,ES355*(1-0.05*i2)
+		FINISH
+
+		*do,i3,0,nds
+			/PREP7
+			MPTEMP,1,0
+			MPDATA,EX,17,1,ES355*(1-0.05*i3)
+			FINISH
+
+			*do,i4,0,nds
+				/PREP7
+				MPTEMP,1,0
+				MPDATA,EX,2,1,ES355*(1-0.05*i4)
+				FINISH
+				/SOL
+				ANTYPE,2
+				MODOPT,LANB,10
+				MODOPT,LANB,10,0,0, ,OFF
+				/STATUS,SOLU
+				ALLSEL,ALL,ALL
+				!SAVE
+				SOLVE
+				FINISH
+				/POST1
+					i5 = i5+1
+					DAMTAB(1,i5) = i1
+					DAMTAB(2,i5) = i2
+					DAMTAB(3,i5) = i3
+					DAMTAB(4,i5) = i4
+					*GET,FRETAB((1:nf:1),i5),MODE,(1:nf:1),FREQ
+					FINISH
+
+			*enddo
+
+		*enddo
+
+	*enddo
+
+*enddo
+
+*MWRITE,FRETAB(1,1),FRE4,CSV
+(1000F9.6)
+*MWRITE,DAMTAB(1,1),D4,CSV
+(1000F3.0)

@@ -1,5 +1,8 @@
 finame = STRCAT('FRE',CHRVAL(arg1))
+finame = STRCAT(finame,CHRVAL(arg2))
+finame = STRCAT(finame,CHRVAL(arg3))
+finame = STRCAT(finame,CHRVAL(arg4))
 *CFOPEN,finame,CSV,Data,APPEND
-*VWRITE,FRETAB(1,1),FRETAB(1,2),FRETAB(1,3),FRETAB(1,4),FRETAB(1,5),FRETAB(1,6),FRETAB(1,7),FRETAB(1,8),FRETAB(1,9),FRETAB(1,10)
-%9.6F, %9.6F, %9.6F, %9.6F, %9.6F, %9.6F, %9.6F, %9.6F, %9.6F, %9.6F
+*VWRITE,FRETAB(1,i5)
+%9.6F
 *CFCLOS

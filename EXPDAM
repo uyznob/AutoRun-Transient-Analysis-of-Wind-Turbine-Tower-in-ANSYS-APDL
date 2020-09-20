@@ -1,5 +1,8 @@
 finame = STRCAT('D',CHRVAL(arg1))
+finame = STRCAT(finame,CHRVAL(arg2))
+finame = STRCAT(finame,CHRVAL(arg3))
+finame = STRCAT(finame,CHRVAL(arg4))
 *CFOPEN,finame,CSV,Data,APPEND
-*VWRITE,DAMTAB(1,1),DAMTAB(1,2),DAMTAB(1,3),DAMTAB(1,4),DAMTAB(1,5),DAMTAB(1,6),DAMTAB(1,7),DAMTAB(1,8),DAMTAB(1,9),DAMTAB(1,10),DAMTAB(1,11)
-%2I, %2I, %2I, %2I, %2I, %2I, %2I, %2I, %2I, %2I, %2I
+*VWRITE,DAMTAB(1,1)
+%2I
 *CFCLOS
