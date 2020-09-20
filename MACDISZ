@@ -1,6 +1,12 @@
-*DO,l,1,7
-	SET,,,,,,,l
-	*DO,m,1,72
-		DISTABZ(m,l,arg3) = UZ(nodetab(m,1))
-	*ENDDO
+SET,,,,,,,2
+*DO,m,1,72
+	DISTABZ(m,1,arg3) = UZ(nodetab(m,1))
+*ENDDO
+SET,,,,,,,5
+*DO,m,1,72
+	DISTABZ(m,2,arg3) = UZ(nodetab(m,1))
+*ENDDO
+SET,,,,,,,7
+*DO,m,1,72
+	DISTABZ(m,3,arg3) = UZ(nodetab(m,1))
 *ENDDO
